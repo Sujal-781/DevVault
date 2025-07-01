@@ -1,6 +1,6 @@
-package com.devvault.devvault_backend.Service;
+package com.devvault.devvault_backend.service;
 
-import com.devvault.devvault_backend.model.user;
+import com.devvault.devvault_backend.model.User;
 import com.devvault.devvault_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,7 +13,7 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public Optional<user> findByEmail(String email) {
+    public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
@@ -21,7 +21,7 @@ public class UserService {
         return userRepository.existsByEmail(email);
     }
 
-    public user saveUser(user user) {
+    public User saveUser(User user) {
         return userRepository.save(user);
     }
 }
