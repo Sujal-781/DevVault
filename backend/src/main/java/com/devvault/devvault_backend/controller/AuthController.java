@@ -1,31 +1,68 @@
 package com.devvault.devvault_backend.controller;
 
-import com.devvault.devvault_backend.dto.AuthRequest;
-import com.devvault.devvault_backend.dto.AuthResponse;
-import com.devvault.devvault_backend.model.User;
+import com.devvault.devvault_backend.dto.*;
+import com.devvault.devvault_backend.service.AuthService;
 import com.devvault.devvault_backend.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
+@Slf4j
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"})
 public class AuthController {
 
-    @Autowired
-    private UserService userService;
-
-    @PostMapping("/register")
-    public AuthResponse register(@RequestBody User user) {
-        if (userService.emailExists(user.getEmail())) {
-            return new AuthResponse(null, "Email already exists.");
-        }
-        userService.saveUser(user);
-        return new AuthResponse(null, "User registered successfully.");
-    }
+    private final AuthService authService;
+    private final UserService userService;
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody AuthRequest request) {
-        // For now, no password hashing or token - just basic structure
-        return new AuthResponse("dummy-token", "Login successful.");
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
+        log.info("Login attempt for email: {}", request.getEmail());
+        try {
+            AuthResponse response = authService.login(request);
+            return ResponseEntity.ok(ApiResponse.success("Login successful", response));
+        } catch (Exception e) {
+            log.error("Login failed for email: {}", request.getEmail(), e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Invalid email or password"));
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
+        log.info("Registration attempt for email: {}", request.getEmail());
+        try {
+            AuthResponse response = authService.register(request);
+            return ResponseEntity.ok(ApiResponse.success("Registration successful", response));
+        } catch (Exception e) {
+            log.error("Registration failed for email: {}", request.getEmail(), e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserDto>> getCurrentUser() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()) {
+                com.devvault.devvault_backend.model.User user =
+                        (com.devvault.devvault_backend.model.User) authentication.getPrincipal();
+                UserDto userDto = userService.convertToDto(user);
+                return ResponseEntity.ok(ApiResponse.success(userDto));
+            }
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("User not authenticated"));
+        } catch (Exception e) {
+            log.error("Error getting current user", e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Error retrieving user information"));
+        }
     }
 }
