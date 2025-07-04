@@ -1,10 +1,15 @@
-// AuthRequest.java
 package com.devvault.devvault_backend.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-public class AuthRequest {
-    private String email;
-    private String password;
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AuthResponse {
+    private String token;
+    private UserDto user;
 }
