@@ -133,15 +133,6 @@ export const Login: React.FC = () => {
               </Link>
             </p>
           </div>
-
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-gray-700/30 rounded-lg border border-gray-600/50">
-            <p className="text-sm text-gray-400 mb-2">Demo Credentials:</p>
-            <div className="text-xs text-gray-300 space-y-1">
-              <p><strong>Developer:</strong> dev@example.com / password123</p>
-              <p><strong>Maintainer:</strong> maintainer@example.com / password123</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

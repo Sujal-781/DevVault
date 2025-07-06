@@ -19,26 +19,31 @@ class ApiService {
       ...options,
     };
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    
-    if (!response.ok) {
-      // Try to get error message from response
-      try {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      } catch {
-        throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+      
+      // Parse response as JSON
+      const data: ApiResponse<T> = await response.json();
+      
+      // Check if the HTTP response was successful
+      if (!response.ok) {
+        // Use the message from the API response if available
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
       }
+      
+      // Check if the backend response indicates failure
+      if (!data.success) {
+        throw new Error(data.message || 'API request failed');
+      }
+      
+      return data;
+    } catch (error) {
+      // Handle network errors or JSON parsing errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error: Unable to connect to server. Please check if the backend is running.');
+      }
+      throw error;
     }
-
-    const data: ApiResponse<T> = await response.json();
-    
-    // Check if the backend response indicates failure
-    if (!data.success) {
-      throw new Error(data.message || 'API request failed');
-    }
-    
-    return data;
   }
 
   async login(credentials: LoginRequest): Promise<AuthResponse> {
