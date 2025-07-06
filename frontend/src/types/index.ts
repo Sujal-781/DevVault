@@ -6,6 +6,9 @@ export interface User {
   claimedIssues: number;
   completedIssues: number;
   totalXP: number;
+  reputation: number;
+  githubUsername?: string;
+  avatar?: string;
 }
 
 export interface Issue {
@@ -27,13 +30,21 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface LoginResponse {
+export interface RegisterRequest {
+  name: string;
+  email: string;
+  password: string;
+  role: 'DEVELOPER' | 'MAINTAINER';
+  githubUsername?: string;
+}
+
+export interface AuthResponse {
   token: string;
   user: User;
 }
 
 export interface ApiResponse<T> {
-  data: T;
-  message?: string;
   success: boolean;
+  message: string;
+  data?: T;
 }

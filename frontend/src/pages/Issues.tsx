@@ -33,12 +33,12 @@ export const Issues: React.FC = () => {
   const handleClaimIssue = async (issueId: string) => {
     try {
       setClaimingIssues(prev => new Set(prev).add(issueId));
-      await api.claimIssue(issueId);
+      const updatedIssue = await api.claimIssue(issueId);
       
-      // Update the local state to mark issue as claimed
+      // Update the local state with the updated issue
       setIssues(prev => 
         prev.map(issue => 
-          issue.id === issueId ? { ...issue, claimed: true } : issue
+          issue.id === issueId ? { ...updatedIssue, claimed: true } : issue
         )
       );
     } catch (err) {

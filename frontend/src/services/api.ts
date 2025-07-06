@@ -1,161 +1,101 @@
-import { LoginRequest, LoginResponse, User, Issue, ApiResponse } from '../types';
-import { getToken, setToken } from './auth';
+import { LoginRequest, RegisterRequest, AuthResponse, User, Issue, ApiResponse } from '../types';
+import { getToken } from './auth';
 
-// Mock users for demo
-const MOCK_USERS = [
-  {
-    id: '1',
-    email: 'dev@example.com',
-    name: 'John Developer',
-    role: 'developer' as const,
-    avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
-    githubUsername: 'johndev',
-    skills: ['React', 'TypeScript', 'Node.js'],
-    reputation: 850
-  },
-  {
-    id: '2',
-    email: 'maintainer@example.com',
-    name: 'Sarah Maintainer',
-    role: 'maintainer' as const,
-    avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
-    githubUsername: 'sarahmaint',
-    skills: ['JavaScript', 'Python', 'Docker'],
-    reputation: 1200
-  }
-];
-
-// Mock issues for demo
-const MOCK_ISSUES: Issue[] = [
-  {
-    id: '1',
-    title: 'Add dark mode toggle to navigation',
-    description: 'Implement a dark mode toggle in the main navigation bar with smooth transitions and persistent user preference storage.',
-    repository: 'awesome-ui-lib',
-    owner: 'techcorp',
-    labels: ['enhancement', 'good first issue'],
-    difficulty: 'beginner',
-    bounty: 150,
-    status: 'open',
-    createdAt: '2024-01-15T10:30:00Z',
-    claimedBy: null,
-    estimatedHours: 8
-  },
-  {
-    id: '2',
-    title: 'Fix memory leak in WebSocket connection',
-    description: 'There\'s a memory leak occurring when WebSocket connections are not properly cleaned up on component unmount.',
-    repository: 'realtime-chat',
-    owner: 'startupxyz',
-    labels: ['bug', 'high priority'],
-    difficulty: 'intermediate',
-    bounty: 300,
-    status: 'open',
-    createdAt: '2024-01-14T14:20:00Z',
-    claimedBy: null,
-    estimatedHours: 12
-  },
-  {
-    id: '3',
-    title: 'Implement OAuth2 authentication flow',
-    description: 'Add support for OAuth2 authentication with Google, GitHub, and Microsoft providers including proper error handling and token refresh.',
-    repository: 'auth-service',
-    owner: 'enterprise-solutions',
-    labels: ['feature', 'security'],
-    difficulty: 'advanced',
-    bounty: 500,
-    status: 'open',
-    createdAt: '2024-01-13T09:15:00Z',
-    claimedBy: null,
-    estimatedHours: 20
-  }
-];
+const API_BASE_URL = 'http://localhost:8080/api';
 
 class ApiService {
-  private async mockDelay(ms: number = 500): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  private createResponse<T>(data: T): ApiResponse<T> {
-    return {
-      success: true,
-      data,
-      message: 'Success'
+  private async makeRequest<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const token = getToken();
+    
+    const config: RequestInit = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      },
+      ...options,
     };
-  }
 
-  async login(credentials: LoginRequest): Promise<LoginResponse> {
-    await this.mockDelay();
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
     
-    const user = MOCK_USERS.find(u => u.email === credentials.email);
-    
-    if (!user || credentials.password !== 'password123') {
-      throw new Error('Invalid email or password');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
-    const token = `mock-token-${user.id}-${Date.now()}`;
-    const response: LoginResponse = {
-      token,
-      user
-    };
+    const data = await response.json();
+    
+    // Handle backend API response format
+    if (data.success === false) {
+      throw new Error(data.message || 'API request failed');
+    }
+    
+    return data.data || data;
+  }
 
-    return response;
+  async login(credentials: LoginRequest): Promise<AuthResponse> {
+    const response = await this.makeRequest<ApiResponse<AuthResponse>>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+    
+    return response.data!;
+  }
+
+  async register(userData: RegisterRequest): Promise<AuthResponse> {
+    const response = await this.makeRequest<ApiResponse<AuthResponse>>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+    
+    return response.data!;
   }
 
   async getCurrentUser(): Promise<User> {
-    await this.mockDelay(200);
-    
-    const token = getToken();
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    // Extract user ID from mock token
-    const userId = token.split('-')[2];
-    const user = MOCK_USERS.find(u => u.id === userId);
-    
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    return user;
+    const response = await this.makeRequest<ApiResponse<User>>('/auth/me');
+    return response.data!;
   }
 
   async getIssues(): Promise<Issue[]> {
-    await this.mockDelay(300);
-    
-    // Return a copy of mock issues to prevent mutations
-    return JSON.parse(JSON.stringify(MOCK_ISSUES));
+    const response = await this.makeRequest<ApiResponse<Issue[]>>('/issues');
+    return response.data!;
   }
 
-  async claimIssue(issueId: string): Promise<void> {
-    await this.mockDelay(400);
+  async getAvailableIssues(): Promise<Issue[]> {
+    const response = await this.makeRequest<ApiResponse<Issue[]>>('/issues/available');
+    return response.data!;
+  }
+
+  async getMyIssues(): Promise<Issue[]> {
+    const response = await this.makeRequest<ApiResponse<Issue[]>>('/issues/my-issues');
+    return response.data!;
+  }
+
+  async claimIssue(issueId: string): Promise<Issue> {
+    const response = await this.makeRequest<ApiResponse<Issue>>(`/issues/${issueId}/claim`, {
+      method: 'POST',
+    });
     
-    const token = getToken();
-    if (!token) {
-      throw new Error('Authentication required');
-    }
+    return response.data!;
+  }
 
-    // Extract user ID from mock token
-    const userId = token.split('-')[2];
-    const user = MOCK_USERS.find(u => u.id === userId);
+  async unclaimIssue(issueId: string): Promise<Issue> {
+    const response = await this.makeRequest<ApiResponse<Issue>>(`/issues/${issueId}/unclaim`, {
+      method: 'POST',
+    });
     
-    if (!user) {
-      throw new Error('User not found');
-    }
+    return response.data!;
+  }
 
-    const issue = MOCK_ISSUES.find(i => i.id === issueId);
-    if (!issue) {
-      throw new Error('Issue not found');
-    }
-
-    if (issue.claimedBy) {
-      throw new Error('Issue already claimed');
-    }
-
-    // Update the mock issue
-    issue.claimedBy = user.id;
-    issue.status = 'in_progress';
+  async completeIssue(issueId: string): Promise<Issue> {
+    const response = await this.makeRequest<ApiResponse<Issue>>(`/issues/${issueId}/complete`, {
+      method: 'POST',
+    });
+    
+    return response.data!;
   }
 }
 

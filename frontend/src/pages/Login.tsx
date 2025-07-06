@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { Github, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Link, Navigate } from 'react-router-dom';
+import { Github, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
@@ -9,6 +9,7 @@ export const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   const { login, isLoggedIn } = useAuth();
 
@@ -22,7 +23,7 @@ export const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await login(email, password);
+      await login({ email, password });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
@@ -84,13 +85,20 @@ export const Login: React.FC = () => {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-200"
+                  className="w-full pl-10 pr-12 py-3 bg-gray-700/50 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-200"
                   placeholder="Enter your password"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
             </div>
 
@@ -110,6 +118,19 @@ export const Login: React.FC = () => {
               )}
             </button>
           </form>
+
+          {/* Register Link */}
+          <div className="mt-6 text-center">
+            <p className="text-gray-400">
+              Don't have an account?{' '}
+              <Link
+                to="/register"
+                className="text-blue-400 hover:text-blue-300 font-medium transition-colors duration-200"
+              >
+                Create one here
+              </Link>
+            </p>
+          </div>
 
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-gray-700/30 rounded-lg border border-gray-600/50">
