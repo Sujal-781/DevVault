@@ -7,7 +7,7 @@ class ApiService {
   private async makeRequest<T>(
     endpoint: string,
     options: RequestInit = {}
-  ): Promise<T> {
+  ): Promise<ApiResponse<T>> {
     const token = getToken();
     
     const config: RequestInit = {
@@ -22,80 +22,127 @@ class ApiService {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
     
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      // Try to get error message from response
+      try {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      } catch {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
     }
 
-    const data = await response.json();
+    const data: ApiResponse<T> = await response.json();
     
-    // Handle backend API response format
-    if (data.success === false) {
+    // Check if the backend response indicates failure
+    if (!data.success) {
       throw new Error(data.message || 'API request failed');
     }
     
-    return data.data || data;
+    return data;
   }
 
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const response = await this.makeRequest<ApiResponse<AuthResponse>>('/auth/login', {
+    const response = await this.makeRequest<AuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
     
-    return response.data!;
+    // Ensure we have the data and it contains token
+    if (!response.data || !response.data.token) {
+      throw new Error('Invalid response: missing authentication data');
+    }
+    
+    return response.data;
   }
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
-    const response = await this.makeRequest<ApiResponse<AuthResponse>>('/auth/register', {
+    const response = await this.makeRequest<AuthResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
     
-    return response.data!;
+    // Ensure we have the data and it contains token
+    if (!response.data || !response.data.token) {
+      throw new Error('Invalid response: missing authentication data');
+    }
+    
+    return response.data;
   }
 
   async getCurrentUser(): Promise<User> {
-    const response = await this.makeRequest<ApiResponse<User>>('/auth/me');
-    return response.data!;
+    const response = await this.makeRequest<User>('/auth/me');
+    
+    if (!response.data) {
+      throw new Error('Invalid response: missing user data');
+    }
+    
+    return response.data;
   }
 
   async getIssues(): Promise<Issue[]> {
-    const response = await this.makeRequest<ApiResponse<Issue[]>>('/issues');
-    return response.data!;
+    const response = await this.makeRequest<Issue[]>('/issues');
+    
+    if (!response.data) {
+      throw new Error('Invalid response: missing issues data');
+    }
+    
+    return response.data;
   }
 
   async getAvailableIssues(): Promise<Issue[]> {
-    const response = await this.makeRequest<ApiResponse<Issue[]>>('/issues/available');
-    return response.data!;
+    const response = await this.makeRequest<Issue[]>('/issues/available');
+    
+    if (!response.data) {
+      throw new Error('Invalid response: missing issues data');
+    }
+    
+    return response.data;
   }
 
   async getMyIssues(): Promise<Issue[]> {
-    const response = await this.makeRequest<ApiResponse<Issue[]>>('/issues/my-issues');
-    return response.data!;
+    const response = await this.makeRequest<Issue[]>('/issues/my-issues');
+    
+    if (!response.data) {
+      throw new Error('Invalid response: missing issues data');
+    }
+    
+    return response.data;
   }
 
   async claimIssue(issueId: string): Promise<Issue> {
-    const response = await this.makeRequest<ApiResponse<Issue>>(`/issues/${issueId}/claim`, {
+    const response = await this.makeRequest<Issue>(`/issues/${issueId}/claim`, {
       method: 'POST',
     });
     
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Invalid response: missing issue data');
+    }
+    
+    return response.data;
   }
 
   async unclaimIssue(issueId: string): Promise<Issue> {
-    const response = await this.makeRequest<ApiResponse<Issue>>(`/issues/${issueId}/unclaim`, {
+    const response = await this.makeRequest<Issue>(`/issues/${issueId}/unclaim`, {
       method: 'POST',
     });
     
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Invalid response: missing issue data');
+    }
+    
+    return response.data;
   }
 
   async completeIssue(issueId: string): Promise<Issue> {
-    const response = await this.makeRequest<ApiResponse<Issue>>(`/issues/${issueId}/complete`, {
+    const response = await this.makeRequest<Issue>(`/issues/${issueId}/complete`, {
       method: 'POST',
     });
     
-    return response.data!;
+    if (!response.data) {
+      throw new Error('Invalid response: missing issue data');
+    }
+    
+    return response.data;
   }
 }
 

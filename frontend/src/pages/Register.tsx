@@ -77,7 +77,9 @@ export const Register: React.FC = () => {
 
       await register(registerData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      // Extract error message, handling both Error objects and string messages
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

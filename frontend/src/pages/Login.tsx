@@ -25,7 +25,9 @@ export const Login: React.FC = () => {
     try {
       await login({ email, password });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      // Extract error message, handling both Error objects and string messages
+      const errorMessage = err instanceof Error ? err.message : 'Login failed';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

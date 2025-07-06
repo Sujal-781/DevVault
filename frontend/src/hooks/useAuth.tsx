@@ -45,20 +45,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (credentials: LoginRequest) => {
     try {
-      const response = await api.login(credentials);
-      setToken(response.token);
-      setUser(response.user);
+      const authResponse = await api.login(credentials);
+      
+      // Validate response structure
+      if (!authResponse || !authResponse.token || !authResponse.user) {
+        throw new Error('Invalid login response from server');
+      }
+      
+      setToken(authResponse.token);
+      setUser(authResponse.user);
     } catch (error) {
+      console.error('Login error:', error);
       throw error;
     }
   };
 
   const register = async (userData: RegisterRequest) => {
     try {
-      const response = await api.register(userData);
-      setToken(response.token);
-      setUser(response.user);
+      const authResponse = await api.register(userData);
+      
+      // Validate response structure
+      if (!authResponse || !authResponse.token || !authResponse.user) {
+        throw new Error('Invalid registration response from server');
+      }
+      
+      setToken(authResponse.token);
+      setUser(authResponse.user);
     } catch (error) {
+      console.error('Registration error:', error);
       throw error;
     }
   };
