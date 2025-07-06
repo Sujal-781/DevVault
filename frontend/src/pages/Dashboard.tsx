@@ -1,9 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, Briefcase, CheckCircle, Star, TrendingUp, Award } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   if (!user) return null;
 
@@ -48,6 +50,10 @@ export const Dashboard: React.FC = () => {
 
   const getRoleIcon = (role: string) => {
     return role === 'Developer' ? '👨‍💻' : '🔧';
+  };
+
+  const handleBrowseIssues = () => {
+    navigate('/issues');
   };
 
   return (
@@ -149,7 +155,10 @@ export const Dashboard: React.FC = () => {
             <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
             
             <div className="space-y-4">
-              <button className="w-full p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-lg hover:from-blue-500/30 hover:to-purple-500/30 transition-all duration-200 text-left group">
+              <button 
+                onClick={handleBrowseIssues}
+                className="w-full p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-lg hover:from-blue-500/30 hover:to-purple-500/30 transition-all duration-200 text-left group"
+              >
                 <div className="flex items-center">
                   <Briefcase className="h-5 w-5 text-blue-400 mr-3 group-hover:scale-110 transition-transform duration-200" />
                   <div>

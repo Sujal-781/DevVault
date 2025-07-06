@@ -89,6 +89,23 @@ class ApiService {
     return response.data;
   }
 
+  async fetchAvailableIssues(): Promise<Issue[]> {
+    const token = getToken();
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+
+    const response = await this.makeRequest<Issue[]>('/issues', {
+      method: 'GET',
+    });
+    
+    if (!response.data) {
+      throw new Error('Invalid response: missing issues data');
+    }
+    
+    return response.data;
+  }
+
   async getAvailableIssues(): Promise<Issue[]> {
     const response = await this.makeRequest<Issue[]>('/issues/available');
     

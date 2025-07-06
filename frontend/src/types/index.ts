@@ -21,6 +21,8 @@ export interface Issue {
   labels: string[];
   claimed: boolean;
   claimedBy?: string;
+  claimedByUserId?: string | null;
+  status?: 'OPEN' | 'CLAIMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CLOSED';
   createdAt: string;
   url: string;
 }
