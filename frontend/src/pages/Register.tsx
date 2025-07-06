@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Github, Mail, Lock, User as UserIcon, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -20,6 +20,7 @@ export const Register: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const { register, isLoggedIn } = useAuth();
+  const navigate = useNavigate();
 
   if (isLoggedIn) {
     return <Navigate to="/dashboard" replace />;
@@ -60,6 +61,7 @@ export const Register: React.FC = () => {
     e.preventDefault();
     setError('');
 
+    // Client-side validation
     if (!validateForm()) {
       return;
     }
@@ -67,18 +69,31 @@ export const Register: React.FC = () => {
     setLoading(true);
 
     try {
+      // Prepare the exact payload expected by backend
       const registerData: RegisterRequest = {
         name: formData.name.trim(),
         email: formData.email.trim(),
         password: formData.password,
-        role: formData.role,
+        role: formData.role.toUpperCase() as 'DEVELOPER' | 'MAINTAINER', // Ensure uppercase
         githubUsername: formData.githubUsername.trim() || undefined,
       };
 
+      // Call the registration API
       await register(registerData);
+      
+      // If successful, redirect to dashboard (handled by useAuth hook)
+      navigate('/dashboard');
+      
     } catch (err) {
-      // Extract error message, handling both Error objects and string messages
-      const errorMessage = err instanceof Error ? err.message : 'Registration failed';
+      // Handle different types of errors
+      let errorMessage = 'Registration failed';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -199,8 +214,9 @@ export const Register: React.FC = () => {
                   value={formData.password}
                   onChange={handleChange}
                   className="w-full pl-10 pr-12 py-3 bg-gray-700/50 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-200"
-                  placeholder="Create a password"
+                  placeholder="Create a password (min 6 characters)"
                   required
+                  minLength={6}
                 />
                 <button
                   type="button"
@@ -224,7 +240,11 @@ export const Register: React.FC = () => {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-12 py-3 bg-gray-700/50 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-200"
+                  className={`w-full pl-10 pr-12 py-3 bg-gray-700/50 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-200 ${
+                    formData.confirmPassword && formData.password !== formData.confirmPassword
+                      ? 'border-red-500'
+                      : 'border-gray-600'
+                  }`}
                   placeholder="Confirm your password"
                   required
                 />
@@ -236,12 +256,15 @@ export const Register: React.FC = () => {
                   {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+              {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                <p className="text-red-400 text-xs mt-1">Passwords do not match</p>
+              )}
             </div>
 
             {/* Register Button */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (formData.confirmPassword && formData.password !== formData.confirmPassword)}
               className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 focus:ring-4 focus:ring-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02]"
             >
               {loading ? (
