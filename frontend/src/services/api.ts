@@ -3,6 +3,31 @@ import { getToken } from './auth';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
+// GitHub API configuration
+const GITHUB_API_BASE_URL = 'https://api.github.com';
+// TODO: Add your GitHub token here for higher rate limits (5000 requests/hour vs 60)
+// const GITHUB_TOKEN = 'your_github_token_here';
+
+interface GitHubIssue {
+  id: number;
+  number: number;
+  title: string;
+  body: string | null;
+  state: string;
+  html_url: string;
+  created_at: string;
+  updated_at: string;
+  labels: Array<{
+    name: string;
+    color: string;
+  }>;
+  user: {
+    login: string;
+    avatar_url: string;
+  };
+  pull_request?: any; // If this exists, it's a PR, not an issue
+}
+
 class ApiService {
   private async makeRequest<T>(
     endpoint: string,
@@ -46,6 +71,113 @@ class ApiService {
     }
   }
 
+  // GitHub API Methods
+  async fetchGitHubIssues(owner: string, repo: string): Promise<Issue[]> {
+    try {
+      const headers: HeadersInit = {
+        'Accept': 'application/vnd.github+json',
+        'User-Agent': 'DevVault-App',
+      };
+
+      // Uncomment and add your GitHub token for higher rate limits
+      // if (GITHUB_TOKEN) {
+      //   headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
+      // }
+
+      const response = await fetch(
+        `${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/issues?state=open&per_page=50`,
+        { headers }
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(`Repository ${owner}/${repo} not found`);
+        }
+        if (response.status === 403) {
+          throw new Error('GitHub API rate limit exceeded. Please try again later.');
+        }
+        throw new Error(`GitHub API error: ${response.status}`);
+      }
+
+      const githubIssues: GitHubIssue[] = await response.json();
+
+      // Filter out pull requests and convert to our Issue format
+      const issues: Issue[] = githubIssues
+        .filter(issue => !issue.pull_request) // Remove pull requests
+        .map(issue => ({
+          id: issue.id.toString(),
+          title: issue.title,
+          description: issue.body || 'No description provided',
+          difficulty: this.determineDifficulty(issue.labels),
+          reward: this.calculateReward(issue.labels),
+          repository: repo,
+          labels: issue.labels.map(label => label.name),
+          claimed: false,
+          claimedBy: undefined,
+          claimedByUserId: null,
+          status: 'OPEN',
+          createdAt: issue.created_at,
+          url: issue.html_url,
+        }));
+
+      return issues;
+    } catch (error) {
+      console.error('Error fetching GitHub issues:', error);
+      throw error;
+    }
+  }
+
+  private determineDifficulty(labels: Array<{ name: string; color: string }>): 'Easy' | 'Medium' | 'Hard' {
+    const labelNames = labels.map(label => label.name.toLowerCase());
+    
+    if (labelNames.some(name => 
+      name.includes('good first issue') || 
+      name.includes('beginner') || 
+      name.includes('easy') ||
+      name.includes('starter')
+    )) {
+      return 'Easy';
+    }
+    
+    if (labelNames.some(name => 
+      name.includes('hard') || 
+      name.includes('complex') || 
+      name.includes('expert') ||
+      name.includes('advanced')
+    )) {
+      return 'Hard';
+    }
+    
+    return 'Medium';
+  }
+
+  private calculateReward(labels: Array<{ name: string; color: string }>): number {
+    const labelNames = labels.map(label => label.name.toLowerCase());
+    
+    // Base reward
+    let reward = 100;
+    
+    // Bonus for difficulty
+    if (labelNames.some(name => name.includes('good first issue') || name.includes('easy'))) {
+      reward = 75;
+    } else if (labelNames.some(name => name.includes('hard') || name.includes('complex'))) {
+      reward = 200;
+    }
+    
+    // Bonus for priority
+    if (labelNames.some(name => name.includes('high priority') || name.includes('urgent'))) {
+      reward += 50;
+    }
+    
+    // Bonus for bug fixes
+    if (labelNames.some(name => name.includes('bug'))) {
+      reward += 25;
+    }
+    
+    return reward;
+  }
+
+  // Existing backend API methods
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     const response = await this.makeRequest<AuthResponse>('/auth/login', {
       method: 'POST',
