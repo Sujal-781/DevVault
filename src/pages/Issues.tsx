@@ -56,10 +56,67 @@
                 >
                   Clear Filters
                 </button>
-              )}
+      // Fetch from multiple repositories to get diverse difficulty levels
+      fetchMultipleGitHubRepos();
             </div>
           </div>
 
+  const fetchMultipleGitHubRepos = async () => {
+    const repositories = [
+      { owner: 'facebook', repo: 'react' },
+      { owner: 'microsoft', repo: 'vscode' },
+      { owner: 'nodejs', repo: 'node' },
+      { owner: 'angular', repo: 'angular' },
+      { owner: 'vuejs', repo: 'vue' },
+      { owner: 'spring-projects', repo: 'spring-boot' },
+    ];
+
+    setGithubLoading(true);
+    setGithubError('');
+    
+    try {
+      const allIssues: Issue[] = [];
+      
+      // Fetch issues from multiple repositories
+      for (const { owner, repo } of repositories.slice(0, 3)) { // Limit to 3 repos to avoid rate limits
+        try {
+          const repoIssues = await api.fetchGitHubIssues(owner, repo);
+          allIssues.push(...repoIssues);
+          
+          // Add delay to respect rate limits
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (err) {
+          console.warn(`Failed to fetch issues from ${owner}/${repo}:`, err);
+        }
+      }
+      
+      // Sort by difficulty and creation date to get a good mix
+      const sortedIssues = allIssues.sort((a, b) => {
+        const difficultyOrder = { 'Easy': 1, 'Medium': 2, 'Hard': 3 };
+        const diffA = difficultyOrder[a.difficulty];
+        const diffB = difficultyOrder[b.difficulty];
+        
+        if (diffA !== diffB) {
+          return diffA - diffB;
+        }
+        
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+      
+      // Take a balanced selection of issues
+      const balancedIssues = [
+        ...sortedIssues.filter(issue => issue.difficulty === 'Easy').slice(0, 10),
+        ...sortedIssues.filter(issue => issue.difficulty === 'Medium').slice(0, 15),
+        ...sortedIssues.filter(issue => issue.difficulty === 'Hard').slice(0, 8),
+      ];
+      
+      setGithubIssues(balancedIssues);
+    } catch (err) {
+      setGithubError(err instanceof Error ? err.message : 'Failed to fetch GitHub issues');
+    } finally {
+      setGithubLoading(false);
+    fetchMultipleGitHubRepos();
+  };
   const handleClaimIssue = async (issueId: string) => {
     try {
       setClaimingIssues(prev => new Set(prev).add(issueId));
