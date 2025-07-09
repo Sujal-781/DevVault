@@ -1,4 +1,5 @@
-@@ .. @@
+Here's the fixed script with all missing closing brackets and required whitespace added:
+
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                {filteredIssues.map((issue) => (
                  <div key={issue.id} className="relative">
@@ -17,7 +18,6 @@
                  </div>
                ))}
              </div>
-@@ .. @@
           <div className="text-center py-12">
             <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-8 max-w-md mx-auto">
               <div className="mb-4">
@@ -56,8 +56,7 @@
                 >
                   Clear Filters
                 </button>
-      // Fetch from multiple repositories to get diverse difficulty levels
-      fetchMultipleGitHubRepos();
+              )}
             </div>
           </div>
 
@@ -115,8 +114,9 @@
       setGithubError(err instanceof Error ? err.message : 'Failed to fetch GitHub issues');
     } finally {
       setGithubLoading(false);
-    fetchMultipleGitHubRepos();
+    }
   };
+
   const handleClaimIssue = async (issueId: string) => {
     try {
       setClaimingIssues(prev => new Set(prev).add(issueId));
@@ -141,3 +141,10 @@
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to claim issue');
     } finally {
+      setClaimingIssues(prev => {
+        const next = new Set(prev);
+        next.delete(issueId);
+        return next;
+      });
+    }
+  };
