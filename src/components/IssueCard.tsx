@@ -51,8 +51,8 @@ export const IssueCard: React.FC<IssueCardProps> = ({
           <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors duration-200 break-words line-clamp-2">
             {issue.title}
           </h3>
-          <div className="max-h-20 overflow-hidden">
-            <p className="text-sm text-gray-400 break-words line-clamp-3">
+          <div className="h-16 overflow-hidden">
+            <p className="text-sm text-gray-400 break-words line-clamp-3 leading-relaxed">
               {issue.description}
             </p>
           </div>
@@ -69,17 +69,17 @@ export const IssueCard: React.FC<IssueCardProps> = ({
       </div>
 
       {/* Repository */}
-      <div className="text-sm text-gray-400 mb-4 break-words">
+      <div className="text-sm text-gray-400 mb-4 break-words truncate">
         <span className="font-medium">{issue.repository}</span>
       </div>
 
       {/* Labels */}
       {issue.labels && issue.labels.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4 max-h-16 overflow-hidden">
+        <div className="flex flex-wrap gap-2 mb-4 h-12 overflow-hidden">
           {issue.labels.slice(0, 3).map((label) => (
             <span
               key={label}
-              className="px-2 py-1 text-xs bg-gray-700/50 text-gray-300 rounded-md border border-gray-600/50 break-words"
+              className="px-2 py-1 text-xs bg-gray-700/50 text-gray-300 rounded-md border border-gray-600/50 truncate max-w-24"
             >
               {label}
             </span>

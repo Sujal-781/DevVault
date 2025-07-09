@@ -1,25 +1,34 @@
-@@ .. @@
- @tailwind base;
- @tailwind components;
- @tailwind utilities;
-+
-+@layer utilities {
-+  .line-clamp-2 {
-+    display: -webkit-box;
-+    -webkit-line-clamp: 2;
-+    -webkit-box-orient: vertical;
-+    overflow: hidden;
-+  }
-+  
-+  .line-clamp-3 {
-+    display: -webkit-box;
-+    -webkit-line-clamp: 3;
-+    -webkit-box-orient: vertical;
-+    overflow: hidden;
-+  }
-+  
-+  .break-words {
-+    word-wrap: break-word;
-+    word-break: break-word;
-+  }
-+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5;
+  }
+  
+  .break-words {
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+  }
+  
+  .truncate-multiline {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
