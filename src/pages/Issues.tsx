@@ -1,6 +1,6 @@
 Here's the fixed script with all missing closing brackets and required whitespace added:
 
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
                {filteredIssues.map((issue) => (
                  <div key={issue.id} className="relative">
                    <IssueCard
@@ -10,7 +10,7 @@ Here's the fixed script with all missing closing brackets and required whitespac
                    />
                    {/* GitHub Issue Badge */}
                    {githubIssues.some(gi => gi.id === issue.id) && (
-                     <div className="absolute top-2 right-2 bg-purple-500/20 text-purple-400 text-xs px-2 py-1 rounded-md border border-purple-500/30">
+                    <div className="absolute top-4 right-4 bg-purple-500/20 text-purple-400 text-xs px-2 py-1 rounded-md border border-purple-500/30 z-10">
                        <Github className="h-3 w-3 inline mr-1" />
                        GitHub
                      </div>

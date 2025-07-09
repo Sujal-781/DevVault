@@ -44,17 +44,21 @@ export const IssueCard: React.FC<IssueCardProps> = ({
   };
 
   return (
-    <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 hover:border-blue-500/30 hover:bg-gray-800/70 transition-all duration-300 group h-full flex flex-col">
+    <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 hover:border-blue-500/30 hover:bg-gray-800/70 transition-all duration-300 group flex flex-col h-full min-h-[400px]">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
-        <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors duration-200 break-words line-clamp-2">
-            {issue.title}
+        <div className="flex-1 min-w-0 pr-4">
+          <h3 className="text-lg font-semibold text-white mb-3 group-hover:text-blue-400 transition-colors duration-200 break-words leading-tight">
+            <span className="line-clamp-2">{issue.title}</span>
           </h3>
-          <div className="h-16 overflow-hidden">
-            <p className="text-sm text-gray-400 break-words line-clamp-3 leading-relaxed">
+          
+          {/* Fixed height description container with fade effect */}
+          <div className="relative h-20 overflow-hidden">
+            <p className="text-sm text-gray-400 break-words leading-relaxed">
               {issue.description}
             </p>
+            {/* Fade gradient overlay */}
+            <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-gray-800/50 to-transparent pointer-events-none"></div>
           </div>
         </div>
         
@@ -62,86 +66,93 @@ export const IssueCard: React.FC<IssueCardProps> = ({
           href={issue.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="ml-4 p-2 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all duration-200 flex-shrink-0"
+          className="flex-shrink-0 p-2 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all duration-200"
         >
           <ExternalLink className="h-4 w-4" />
         </a>
       </div>
 
       {/* Repository */}
-      <div className="text-sm text-gray-400 mb-4 break-words truncate">
-        <span className="font-medium">{issue.repository}</span>
+      <div className="mb-4">
+        <span className="text-sm text-gray-400 font-medium truncate block">
+          {issue.repository}
+        </span>
       </div>
 
-      {/* Labels */}
-      {issue.labels && issue.labels.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4 h-12 overflow-hidden">
-          {issue.labels.slice(0, 3).map((label) => (
-            <span
-              key={label}
-              className="px-2 py-1 text-xs bg-gray-700/50 text-gray-300 rounded-md border border-gray-600/50 truncate max-w-24"
-            >
-              {label}
-            </span>
-          ))}
-          {issue.labels.length > 3 && (
-            <span className="text-xs text-gray-400">
-              +{issue.labels.length - 3} more
-            </span>
-          )}
-        </div>
-      )}
+      {/* Labels - Fixed height container */}
+      <div className="mb-4 h-16 overflow-hidden">
+        {issue.labels && issue.labels.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {issue.labels.slice(0, 4).map((label) => (
+              <span
+                key={label}
+                className="inline-block px-2 py-1 text-xs bg-gray-700/50 text-gray-300 rounded-md border border-gray-600/50 truncate max-w-[120px]"
+                title={label}
+              >
+                {label}
+              </span>
+            ))}
+            {issue.labels.length > 4 && (
+              <span className="inline-block px-2 py-1 text-xs text-gray-400 bg-gray-700/30 rounded-md border border-gray-600/30">
+                +{issue.labels.length - 4}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Spacer to push footer to bottom */}
-      <div className="flex-1"></div>
+      <div className="flex-grow"></div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-700 mt-auto">
-        <div className="flex items-center space-x-3">
-          {/* Difficulty Badge */}
-          <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border ${getDifficultyColor(issue.difficulty)}`}>
-            {getDifficultyIcon(issue.difficulty)}
-            <span className="ml-1">{issue.difficulty}</span>
-          </span>
+      {/* Footer - Always at bottom */}
+      <div className="mt-auto pt-4 border-t border-gray-700">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            {/* Difficulty Badge */}
+            <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border ${getDifficultyColor(issue.difficulty)}`}>
+              {getDifficultyIcon(issue.difficulty)}
+              <span className="ml-1">{issue.difficulty}</span>
+            </span>
 
-          {/* Reward */}
-          <div className="flex items-center text-sm">
-            <Star className="h-4 w-4 text-yellow-400 mr-1" />
-            <span className="text-yellow-400 font-medium">{issue.reward} XP</span>
+            {/* Reward */}
+            <div className="flex items-center text-sm">
+              <Star className="h-4 w-4 text-yellow-400 mr-1" />
+              <span className="text-yellow-400 font-medium">{issue.reward} XP</span>
+            </div>
           </div>
-        </div>
 
-        {/* Action Button */}
-        {showActions && (
-          <>
-            {!issue.claimed ? (
-              onClaim && (
-                <button
-                  onClick={() => onClaim(issue.id)}
-                  disabled={claiming}
-                  className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
-                >
-                  {claiming ? 'Claiming...' : 'Claim Issue'}
-                </button>
-              )
-            ) : (
-              <div className="flex items-center space-x-2">
-                <span className="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-md border border-green-500/30">
-                  Claimed
-                </span>
-                {onUnclaim && (
+          {/* Action Button */}
+          {showActions && (
+            <div className="flex-shrink-0">
+              {!issue.claimed ? (
+                onClaim && (
                   <button
-                    onClick={() => onUnclaim(issue.id)}
+                    onClick={() => onClaim(issue.id)}
                     disabled={claiming}
-                    className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded-md border border-red-500/30 hover:bg-red-500/30 transition-all duration-200"
+                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 whitespace-nowrap"
                   >
-                    Unclaim
+                    {claiming ? 'Claiming...' : 'Claim Issue'}
                   </button>
-                )}
-              </div>
-            )}
-          </>
-        )}
+                )
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <span className="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-md border border-green-500/30 whitespace-nowrap">
+                    Claimed
+                  </span>
+                  {onUnclaim && (
+                    <button
+                      onClick={() => onUnclaim(issue.id)}
+                      disabled={claiming}
+                      className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded-md border border-red-500/30 hover:bg-red-500/30 transition-all duration-200 whitespace-nowrap"
+                    >
+                      Unclaim
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

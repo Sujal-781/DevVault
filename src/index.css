@@ -8,7 +8,7 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    line-height: 1.4;
+    line-height: 1.5;
   }
   
   .line-clamp-3 {
@@ -16,7 +16,7 @@
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    line-height: 1.5;
+    line-height: 1.6;
   }
   
   .break-words {
@@ -25,10 +25,22 @@
     hyphens: auto;
   }
   
-  .truncate-multiline {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  /* Custom grid utilities for equal height cards */
+  .auto-rows-fr {
+    grid-auto-rows: 1fr;
+  }
+  
+  /* Responsive text sizing */
+  @media (max-width: 768px) {
+    .line-clamp-2,
+    .line-clamp-3 {
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+  }
+  
+  /* Smooth fade gradient for text overflow */
+  .fade-bottom {
+    background: linear-gradient(to bottom, transparent 0%, rgba(31, 41, 55, 0.8) 100%);
   }
 }
